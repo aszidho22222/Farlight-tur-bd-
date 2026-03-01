@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Farlight 84 eSports App</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* ================= CSS STYLES (NEON ESPORTS THEME) ================= */
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-gradient: #1a0b2e;
+            --neon-cyan: #00f3ff;
+            --neon-cyan-glow: rgba(0, 243, 255, 0.4);
+            --neon-purple: #b026ff;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-muted: #a0a0a0;
+            --success: #00ff88;
+            --danger: #ff3366;
+            --card-radius: 16px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-gradient) 100%);
+            color: var(--text-main); font-family: 'Inter', sans-serif;
+            min-height: 100vh; background-attachment: fixed;
+            padding-bottom: 80px; overflow-x: hidden;
+        }
+
+        h1, h2, h3 { font-family: 'Poppins', sans-serif; }
+
+        /* Glassmorphism */
+        .glass {
+            background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border); border-radius: var(--card-radius);
+            padding: 15px; margin-bottom: 15px;
+        }
+
+        /* App Header */
+        header {
+            background: rgba(10, 10, 15, 0.8); backdrop-filter: blur(10px);
+            padding: 15px 20px; position: sticky; top: 0; z-index: 100;
+            border-bottom: 1px solid var(--glass-border); display: flex;
+            justify-content: space-between; align-items: center;
+        }
+        header h2 { font-size: 1.2rem; color: var(--neon-cyan); text-shadow: 0 0 10px var(--neon-cyan-glow); }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 15px; border: none; border-radius: 8px; font-family: 'Poppins', sans-serif;
+            font-size: 0.9rem; cursor: pointer; transition: 0.3s; color: #fff;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+        }
+        .btn-primary { background: transparent; border: 1px solid var(--neon-cyan); color: var(--neon-cyan); box-shadow: 0 0 10px rgba(0, 243, 255, 0.1); }
+        .btn-primary:hover { background: var(--neon-cyan); color: #000; box-shadow: 0 0 15px var(--neon-cyan-glow); }
+        .btn-success { background: var(--success); color: #000; }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-sm { padding: 6px 12px; font-size: 0.8rem; width: auto; }
+        .btn:disabled { background: #333; color: #666; border-color: #333; cursor: not-allowed; box-shadow: none; }
+
+        /* Inputs */
+        input, select, textarea {
+            width: 100%; padding: 12px; margin-bottom: 12px; background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border); border-radius: 8px; color: #fff;
+            font-family: 'Inter', sans-serif; outline: none; transition: 0.3s;
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--neon-cyan); box-shadow: 0 0 8px var(--neon-cyan-glow); }
+        
+        .checkbox-container { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; font-size: 0.9rem; color: var(--neon-purple); cursor: pointer;}
+        .checkbox-container input { width: auto; margin: 0; accent-color: var(--neon-purple); transform: scale(1.2); cursor: pointer;}
+
+        /* Layout & Views */
+        .app-view { display: none; padding: 15px; }
+        .app-view.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Auth Section */
+        #auth-section { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; padding: 20px; }
+        .auth-card { width: 100%; max-width: 400px; text-align: center; }
+        .auth-card h2 { margin-bottom: 20px; color: var(--neon-cyan); }
+        .toggle-auth { color: var(--neon-purple); cursor: pointer; font-size: 0.85rem; margin-top: 15px; display: block; text-decoration: underline; }
+
+        /* Tournament Cards */
+        .tournament-card { position: relative; overflow: hidden; }
+        .tournament-card::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, var(--neon-cyan-glow) 0%, transparent 60%);
+            opacity: 0.1; pointer-events: none;
+        }
+        .t-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .t-title { font-size: 1.2rem; color: var(--neon-cyan); font-weight: bold; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: bold; background: rgba(255,255,255,0.1); }
+        .badge.cash { color: var(--success); border: 1px solid var(--success); }
+        .badge.diamond { color: var(--neon-purple); border: 1px solid var(--neon-purple); }
+        .t-details { font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 15px; }
+        .t-details span { color: #fff; font-weight: bold; }
+        
+        /* Filter Tabs */
+        .filter-container { display: flex; gap: 10px; margin-bottom: 15px; }
+        .filter-btn { flex: 1; padding: 8px; text-align: center; border: 1px solid var(--glass-border); border-radius: 8px; cursor: pointer; color: var(--text-muted); transition: 0.3s; font-size: 0.9rem; }
+        .filter-btn.active { background: rgba(0, 243, 255, 0.1); border-color: var(--neon-cyan); color: var(--neon-cyan); }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(10, 10, 15, 0.9);
+            backdrop-filter: blur(15px); display: flex; justify-content: space-around;
+            padding: 12px 0; border-top: 1px solid var(--glass-border); z-index: 100;
+        }
+        .nav-item { text-align: center; color: var(--text-muted); cursor: pointer; transition: 0.3s; flex: 1; }
+        .nav-item i { font-size: 1.2rem; display: block; margin-bottom: 3px; }
+        .nav-item span { font-size: 0.7rem; font-family: 'Poppins', sans-serif; }
+        .nav-item.active { color: var(--neon-cyan); text-shadow: 0 0 10px var(--neon-cyan-glow); transform: translateY(-3px); }
+
+        /* Modals */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+            display: none; justify-content: center; align-items: center; z-index: 200; padding: 20px;
+        }
+        .modal-content {
+            background: var(--bg-dark); border: 1px solid var(--neon-cyan);
+            border-radius: var(--card-radius); width: 100%; max-width: 400px;
+            padding: 20px; max-height: 90vh; overflow-y: auto; box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .close-modal { color: var(--danger); cursor: pointer; font-size: 1.5rem; }
+
+        /* Profile & Boards */
+        .profile-img { width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--neon-cyan); object-fit: cover; margin: 0 auto 10px; display: block; }
+        .board-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); padding: 10px 0; }
+        .board-item:last-child { border-bottom: none; }
+        .total-box { text-align: center; margin-bottom: 15px; padding: 15px; background: rgba(0,255,136,0.1); border: 1px solid var(--success); border-radius: 12px; color: var(--success); }
+        .total-box h2 { font-size: 1.8rem; text-shadow: 0 0 10px rgba(0,255,136,0.4); }
+
+        .room-box { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-top: 10px; border-left: 3px solid var(--neon-cyan); }
+        .copy-btn { background: none; border: none; color: var(--neon-cyan); cursor: pointer; font-size: 1.1rem; float: right;}
+    </style>
+</head>
+<body>
+
+    <!-- 1. Authentication Section -->
+    <div id="auth-section">
+        <div class="glass auth-card" id="login-box">
+            <h2><i class="fa-solid fa-gamepad"></i> Player Login</h2>
+            <input type="email" id="log-email" placeholder="Email Address">
+            <input type="password" id="log-pass" placeholder="Password">
+            <button class="btn btn-primary" onclick="loginUser()">Login</button>
+            <span class="toggle-auth" onclick="toggleAuth()">Create new account? Register</span>
+        </div>
+
+        <div class="glass auth-card" id="reg-box" style="display: none;">
+            <h2><i class="fa-solid fa-user-plus"></i> Register</h2>
+            <input type="text" id="reg-name" placeholder="Full Name">
+            <input type="text" id="reg-uid" placeholder="Farlight 84 UID">
+            <input type="email" id="reg-email" placeholder="Email Address">
+            <input type="password" id="reg-pass" placeholder="Password">
+            <button class="btn btn-primary" onclick="registerUser()">Register</button>
+            <span class="toggle-auth" onclick="toggleAuth()">Already have an account? Login</span>
+        </div>
+    </div>
+
+    <!-- 2. Main App Section -->
+    <div id="main-app" style="display: none;">
+        <header>
+            <h2>Farlight 84 eSports</h2>
+            <img id="header-avatar" src="https://via.placeholder.com/40" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--neon-cyan); object-fit:cover;">
+        </header>
+
+        <!-- View: Tournaments -->
+        <div id="view-home" class="app-view active">
+            <div class="filter-container">
+                <div class="filter-btn active" onclick="filterTournaments('all', this)">All</div>
+                <div class="filter-btn" onclick="filterTournaments('cash', this)">Cash</div>
+                <div class="filter-btn" onclick="filterTournaments('diamond', this)">Diamond</div>
+            </div>
+            <div id="tournament-list">
+                <!-- Loaded via JS -->
+            </div>
+        </div>
+
+        <!-- View: My Matches -->
+        <div id="view-matches" class="app-view">
+            <h3 style="margin-bottom: 15px; color: var(--neon-cyan);"><i class="fa-solid fa-crosshairs"></i> My Matches</h3>
+            <div id="my-matches-list">
+                <!-- Loaded via JS -->
+            </div>
+        </div>
+
+        <!-- View: Board (Donations & Notices) -->
+        <div id="view-board" class="app-view">
+            <div class="total-box">
+                <p>Total Community Donations</p>
+                <h2 id="total-donation-counter">৳ 0</h2>
+            </div>
+            
+            <h3 style="margin-bottom: 10px; color:var(--neon-purple);"><i class="fa-solid fa-bullhorn"></i> Notice Board</h3>
+            <div class="glass" id="notice-list"></div>
+
+            <!-- LEADERBOARD -->
+            <h3 style="margin-top: 20px; margin-bottom: 10px; color:var(--neon-cyan);"><i class="fa-solid fa-trophy"></i> Top Donators</h3>
+            <div class="glass" id="donation-board"></div>
+        </div>
+
+        <!-- View: Profile -->
+        <div id="view-profile" class="app-view">
+            <div class="glass" style="text-align: center;">
+                <img id="prof-img-display" class="profile-img" src="https://via.placeholder.com/80">
+                <h2 id="prof-name" style="color:var(--neon-cyan);">Loading...</h2>
+                <p id="prof-uid" style="color:var(--text-muted); margin-bottom: 15px;">UID: ---</p>
+                <button class="btn btn-primary btn-sm" onclick="openModal('modal-edit-profile')"><i class="fa-solid fa-pen"></i> Edit Profile</button>
+                <button class="btn btn-danger btn-sm" onclick="logout()" style="margin-top: 15px; width: 100%;"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="switchTab('view-home', this)"><i class="fa-solid fa-house"></i><span>Home</span></div>
+            <div class="nav-item" onclick="switchTab('view-matches', this)"><i class="fa-solid fa-gamepad"></i><span>Matches</span></div>
+            <div class="nav-item" onclick="switchTab('view-board', this)"><i class="fa-solid fa-chart-simple"></i><span>Board</span></div>
+            <div class="nav-item" onclick="switchTab('view-profile', this)"><i class="fa-solid fa-user"></i><span>Profile</span></div>
+        </div>
+    </div>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- Join Tournament Modal -->
+    <div id="modal-join" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="join-t-title">Register Squad</h3>
+                <i class="fa-solid fa-xmark close-modal" onclick="closeModal('modal-join')"></i>
+            </div>
+            <input type="hidden" id="join-t-id">
+            <input type="hidden" id="join-t-type">
+            
+            <!-- Update: 3 Players only. Player 2 & 3 are optional -->
+            <input type="text" id="sq-name" placeholder="Squad Name (Required)">
+            <input type="text" id="sq-p1" placeholder="Player 1 UID (Required)">
+            <input type="text" id="sq-p2" placeholder="Player 2 UID (Optional)">
+            <input type="text" id="sq-p3" placeholder="Player 3 UID (Optional)">
+
+            <!-- Optional Donation Fields for Cash Tournaments -->
+            <div id="optional-donation-section" style="display: none; margin-top: 10px; border-top: 1px solid var(--glass-border); padding-top: 10px;">
+                <label class="checkbox-container" style="color: var(--success);">
+                    <input type="checkbox" id="want-to-donate" onchange="toggleDonationFields()"> Support the Prize Pool (Donate)
+                </label>
+                
+                <div id="donation-fields" style="display: none; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">
+                        Send money to Admin: <br><b id="admin-payment-number" style="color:var(--neon-cyan); font-size:1rem;">01XXXXXXXXX (bKash/Nagad)</b>
+                    </p>
+                    <input type="number" id="don-amount" placeholder="Amount Sent (৳)">
+                    <input type="text" id="don-trxid" placeholder="Transaction ID (TrxID)">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="don-hide"> Hide My Name on Leaderboard
+                    </label>
+                </div>
+            </div>
+
+            <button class="btn btn-success" onclick="submitRegistration()" style="margin-top: 15px;">Confirm Registration</button>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div id="modal-edit-profile" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Profile</h3>
+                <i class="fa-solid fa-xmark close-modal" onclick="closeModal('modal-edit-profile')"></i>
+            </div>
+            <input type="text" id="edit-name" placeholder="Full Name">
+            <input type="text" id="edit-uid" placeholder="In-Game UID">
+            <input type="text" id="edit-img" placeholder="Profile Image URL (Optional)">
+            <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+        </div>
+    </div>
+
+    <!-- ================= FIREBASE & JS LOGIC ================= -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getDatabase, ref, onValue, set, push, update, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2F2OSi0Na70juloltQZ7jxij8d2-0B1c",
+            authDomain: "farlight-84-tur.firebaseapp.com",
+            databaseURL: "https://farlight-84-tur-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "farlight-84-tur",
+            storageBucket: "farlight-84-tur.firebasestorage.app",
+            messagingSenderId: "622342153291",
+            appId: "1:622342153291:web:d5bea1d6dc774f01ce99ce"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let currentUser = null;
+        let allTournaments = [];
+        let adminNumber = "01XXXXXXXXX"; // Default
+
+        window.toggleAuth = () => {
+            const loginBox = document.getElementById('login-box');
+            const regBox = document.getElementById('reg-box');
+            if(loginBox.style.display === 'none') { loginBox.style.display = 'block'; regBox.style.display = 'none'; } 
+            else { loginBox.style.display = 'none'; regBox.style.display = 'block'; }
+        };
+
+        // Error Handled Registration
+        window.registerUser = async () => {
+            try {
+                const name = document.getElementById('reg-name').value;
+                const uid = document.getElementById('reg-uid').value;
+                const email = document.getElementById('reg-email').value;
+                const pass = document.getElementById('reg-pass').value;
+
+                if(!name || !uid || !email || !pass) return alert("Fill all fields!");
+
+                const q = query(ref(db, 'users'), orderByChild('email'), equalTo(email));
+                const snap = await get(q);
+                if(snap.exists()) return alert("Email already registered!");
+
+                const newUserRef = push(ref(db, 'users'));
+                const userId = newUserRef.key;
+                await set(newUserRef, {
+                    userId: userId, name: name, gameUID: uid, email: email, password: pass,
+                    profileImage: "https://via.placeholder.com/80"
+                });
+
+                document.getElementById('reg-name').value = '';
+                document.getElementById('reg-uid').value = '';
+                document.getElementById('reg-email').value = '';
+                document.getElementById('reg-pass').value = '';
+
+                alert("Registration Successful! Please Login.");
+                toggleAuth();
+            } catch (error) {
+                console.error(error);
+                alert("Error: " + error.message);
+            }
+        };
+
+        // Error Handled Login
+        window.loginUser = async () => {
+            try {
+                const email = document.getElementById('log-email').value;
+                const pass = document.getElementById('log-pass').value;
+
+                if(!email || !pass) return alert("Enter email and password!");
+
+                const q = query(ref(db, 'users'), orderByChild('email'), equalTo(email));
+                const snap = await get(q);
+
+                if(!snap.exists()) return alert("User not found!");
+
+                let loggedIn = false;
+                snap.forEach((child) => {
+                    const data = child.val();
+                    if(data.password === pass) {
+                        localStorage.setItem('f84_userid', data.userId);
+                        loggedIn = true;
+                    }
+                });
+
+                if(loggedIn) { checkLogin(); } else { alert("Wrong Password!"); }
+            } catch(error) {
+                console.error(error);
+                alert("Error: " + error.message);
+            }
+        };
+
+        window.logout = () => { localStorage.removeItem('f84_userid'); location.reload(); };
+
+        function checkLogin() {
+            const userId = localStorage.getItem('f84_userid');
+            if(userId) {
+                document.getElementById('auth-section').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+                loadUserData(userId);
+                initAppRealtime();
+            }
+        }
+        checkLogin();
+
+        window.switchTab = (tabId, element) => {
+            document.querySelectorAll('.app-view').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            element.classList.add('active');
+        };
+
+        window.openModal = (id) => document.getElementById(id).style.display = 'flex';
+        window.closeModal = (id) => document.getElementById(id).style.display = 'none';
+
+        function loadUserData(userId) {
+            onValue(ref(db, `users/${userId}`), (snap) => {
+                if(!snap.exists()) return logout();
+                currentUser = snap.val();
+                document.getElementById('header-avatar').src = currentUser.profileImage;
+                document.getElementById('prof-img-display').src = currentUser.profileImage;
+                document.getElementById('prof-name').innerText = currentUser.name;
+                document.getElementById('prof-uid').innerText = "UID: " + currentUser.gameUID;
+                
+                document.getElementById('edit-name').value = currentUser.name;
+                document.getElementById('edit-uid').value = currentUser.gameUID;
+                document.getElementById('edit-img').value = currentUser.profileImage !== "https://via.placeholder.com/80" ? currentUser.profileImage : "";
+                document.getElementById('sq-p1').value = currentUser.gameUID;
+            });
+        }
+
+        window.saveProfile = async () => {
+            const name = document.getElementById('edit-name').value;
+            const uid = document.getElementById('edit-uid').value;
+            let img = document.getElementById('edit-img').value;
+            if(!img) img = "https://via.placeholder.com/80";
+
+            await update(ref(db, `users/${currentUser.userId}`), { name, gameUID: uid, profileImage: img });
+            closeModal('modal-edit-profile');
+            alert("Profile Updated!");
+        };
+
+        function initAppRealtime() {
+            // Fetch Admin Number
+            onValue(ref(db, 'settings/paymentNumber'), (snap) => {
+                if(snap.exists()) {
+                    adminNumber = snap.val();
+                    document.getElementById('admin-payment-number').innerText = adminNumber;
+                }
+            });
+
+            // Load Tournaments
+            onValue(ref(db, 'tournaments'), (snap) => {
+                allTournaments = [];
+                if(snap.exists()) {
+                    snap.forEach(child => { allTournaments.push({ id: child.key, ...child.val() }); });
+                }
+                renderTournaments('all');
+                renderMyMatches();
+            });
+
+            // Load Notices
+            onValue(ref(db, 'notices'), (snap) => {
+                const list = document.getElementById('notice-list');
+                list.innerHTML = '';
+                if(snap.exists()) {
+                    snap.forEach(child => {
+                        const d = child.val();
+                        list.innerHTML += `<div style="padding:10px; border-bottom:1px solid var(--glass-border);">
+                            <p style="font-size:0.9rem;">${d.message}</p>
+                            <small style="color:var(--text-muted); font-size:0.7rem;">${d.time}</small>
+                        </div>`;
+                    });
+                } else { list.innerHTML = '<p style="color:var(--text-muted)">No new notices.</p>'; }
+            });
+
+            // Load & Aggregate Donations (LEADERBOARD)
+            onValue(ref(db, 'donations'), (snap) => {
+                const list = document.getElementById('donation-board');
+                let totalAppAmount = 0;
+                const userStats = {}; // To group by User
+
+                if(snap.exists()) {
+                    snap.forEach(tChild => { // tournament level
+                        const tId = tChild.key;
+                        tChild.forEach(dChild => { // donation level
+                            const d = dChild.val();
+                            if(d.status === 'approved') {
+                                totalAppAmount += Number(d.amount);
+                                
+                                // Group logic
+                                let displayId = d.hideId ? dChild.key : d.userId; // Use donation key as unique ID for anonymous
+                                let displayName = d.hideId ? "Anonymous Player" : (d.userName || "Player");
+
+                                if (!userStats[displayId]) {
+                                    userStats[displayId] = { name: displayName, total: 0, tournaments: new Set() };
+                                }
+                                userStats[displayId].total += Number(d.amount);
+                                userStats[displayId].tournaments.add(tId);
+                            }
+                        });
+                    });
+                }
+                
+                // Sort users by total amount highest to lowest
+                const sortedStats = Object.values(userStats).sort((a, b) => b.total - a.total);
+                
+                list.innerHTML = '';
+                if(sortedStats.length > 0) {
+                    sortedStats.forEach(stat => {
+                        list.innerHTML += `
+                            <div class="board-item">
+                                <div>
+                                    <div style="color:var(--neon-cyan); font-weight:bold; font-size:0.95rem;">
+                                        <i class="fa-solid fa-gem"></i> ${stat.name}
+                                    </div>
+                                    <div style="font-size:0.75rem; color:var(--text-muted);">
+                                        Supported in ${stat.tournaments.size} Tournament(s)
+                                    </div>
+                                </div>
+                                <strong style="color:var(--success); font-size:1.1rem;">+৳${stat.total}</strong>
+                            </div>`;
+                    });
+                } else {
+                    list.innerHTML = '<p style="color:var(--text-muted)">No donations yet. Be the first!</p>';
+                }
+                document.getElementById('total-donation-counter').innerText = `৳ ${totalAppAmount}`;
+            });
+        }
+
+        window.filterTournaments = (type, btnElement) => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+            renderTournaments(type);
+        };
+
+        function renderTournaments(filterType) {
+            const list = document.getElementById('tournament-list');
+            list.innerHTML = '';
+            
+            const filtered = filterType === 'all' ? allTournaments : allTournaments.filter(t => t.type === filterType);
+            if(filtered.length === 0) { list.innerHTML = '<p style="color:var(--text-muted); text-align:center;">No tournaments found.</p>'; return; }
+
+            filtered.forEach(t => {
+                const badgeClass = t.type === 'cash' ? 'cash' : 'diamond';
+                const isFull = t.slotsLeft <= 0;
+                const isClosed = t.status === 'closed';
+                
+                let btnHtml = '';
+                if(isClosed) btnHtml = `<button class="btn btn-sm" disabled>Registration Closed</button>`;
+                else if(isFull) btnHtml = `<button class="btn btn-sm" disabled>Slots Full</button>`;
+                else btnHtml = `<button class="btn btn-primary btn-sm" onclick="openJoinModal('${t.id}', '${t.type}', '${t.name}')">Join Now</button>`;
+
+                list.innerHTML += `
+                    <div class="glass tournament-card">
+                        <div class="t-header">
+                            <div class="t-title">${t.name}</div>
+                            <span class="badge ${badgeClass}">${t.type.toUpperCase()}</span>
+                        </div>
+                        <div class="t-details">
+                            Time: <span>${t.matchTime}</span> <br>
+                            Entry Fee: <span style="color:var(--success)">FREE</span> | Prize Pool: <span style="color:var(--neon-cyan)">${t.prizePool}</span> <br>
+                            Slots Available: <span style="color:${t.slotsLeft < 5 ? 'var(--danger)' : 'var(--neon-cyan)'}">${t.slotsLeft} / ${t.totalSlots}</span>
+                        </div>
+                        ${btnHtml}
+                    </div>
+                `;
+            });
+        }
+
+        // Setup Join Modal
+        window.openJoinModal = (tId, tType, tName) => {
+            document.getElementById('join-t-id').value = tId;
+            document.getElementById('join-t-type').value = tType;
+            document.getElementById('join-t-title').innerText = "Join " + tName;
+            
+            document.getElementById('sq-name').value = '';
+            // sq-p1 usually contains logged in user's UID (already populated by loadUserData)
+            document.getElementById('sq-p2').value = '';
+            document.getElementById('sq-p3').value = '';
+
+            const donationSection = document.getElementById('optional-donation-section');
+            if(tType === 'cash') {
+                donationSection.style.display = 'block';
+                document.getElementById('want-to-donate').checked = false;
+                document.getElementById('donation-fields').style.display = 'none';
+                document.getElementById('don-amount').value = '';
+                document.getElementById('don-trxid').value = '';
+                document.getElementById('don-hide').checked = false;
+            } else {
+                donationSection.style.display = 'none';
+            }
+            openModal('modal-join');
+        };
+
+        window.toggleDonationFields = () => {
+            const isChecked = document.getElementById('want-to-donate').checked;
+            document.getElementById('donation-fields').style.display = isChecked ? 'block' : 'none';
+        };
+
+        window.submitRegistration = async () => {
+            const tId = document.getElementById('join-t-id').value;
+            const tType = document.getElementById('join-t-type').value;
+            const uId = currentUser.userId;
+
+            const regCheck = await get(ref(db, `registrations/${tId}/${uId}`));
+            if(regCheck.exists()) return alert("You have already registered for this tournament!");
+
+            const tRef = ref(db, `tournaments/${tId}`);
+            const tSnap = await get(tRef);
+            if(!tSnap.exists()) return alert("Tournament deleted.");
+            const tData = tSnap.val();
+            
+            if(tData.slotsLeft <= 0) return alert("Sorry, slots are full!");
+            if(tData.status === 'closed') return alert("Registration is closed!");
+
+            const sqName = document.getElementById('sq-name').value;
+            const p1 = document.getElementById('sq-p1').value;
+            const p2 = document.getElementById('sq-p2').value;
+            const p3 = document.getElementById('sq-p3').value;
+
+            // Updated Validation: only Squad Name and Player 1 are required
+            if(!sqName || !p1) return alert("Squad Name and Player 1 UID are required!");
+
+            // Check Optional Donation logic
+            if(tType === 'cash' && document.getElementById('want-to-donate').checked) {
+                const amount = document.getElementById('don-amount').value;
+                const trxId = document.getElementById('don-trxid').value;
+                const hideId = document.getElementById('don-hide').checked;
+
+                if(!amount || !trxId) return alert("Please provide Amount and TrxID for donation, or uncheck the donation box.");
+
+                // Save pending donation
+                const donRef = push(ref(db, `donations/${tId}`));
+                await set(donRef, {
+                    userId: uId, 
+                    userName: currentUser.name, 
+                    amount: Number(amount), 
+                    trxId: trxId,
+                    hideId: hideId, 
+                    status: 'pending',
+                    tournamentId: tId
+                });
+            }
+
+            // Save Registration & Decrease Slot
+            await update(tRef, { slotsLeft: tData.slotsLeft - 1 });
+            
+            // Save 3 players array
+            await set(ref(db, `registrations/${tId}/${uId}`), {
+                squadName: sqName, 
+                players: [p1, p2, p3], 
+                timestamp: new Date().toISOString()
+            });
+
+            closeModal('modal-join');
+            alert("Registration Successful!");
+            renderMyMatches();
+        };
+
+        async function renderMyMatches() {
+            if(!currentUser) return;
+            const list = document.getElementById('my-matches-list');
+            let hasMatch = false;
+            list.innerHTML = '';
+
+            for (const t of allTournaments) {
+                const regSnap = await get(ref(db, `registrations/${t.id}/${currentUser.userId}`));
+                if(regSnap.exists()) {
+                    hasMatch = true;
+                    const sqData = regSnap.val();
+                    
+                    let roomHtml = '';
+                    if(t.roomLocked === 'true') {
+                        roomHtml = `<div class="room-box" style="color:var(--text-muted);"><i class="fa-solid fa-lock"></i> Room ID & Pass will be revealed before match.</div>`;
+                    } else {
+                        roomHtml = `
+                            <div class="room-box">
+                                <p style="color:var(--neon-cyan);"><strong>Room ID:</strong> <span id="r-${t.id}">${t.roomId}</span> 
+                                <button class="copy-btn" onclick="copyText('${t.roomId}')"><i class="fa-regular fa-copy"></i></button></p>
+                                <p style="color:var(--success); margin-top:5px;"><strong>Password:</strong> <span id="p-${t.id}">${t.roomPassword}</span>
+                                <button class="copy-btn" onclick="copyText('${t.roomPassword}')"><i class="fa-regular fa-copy"></i></button></p>
+                            </div>
+                        `;
+                    }
+
+                    list.innerHTML += `
+                        <div class="glass">
+                            <h4 style="color:var(--neon-cyan); margin-bottom:5px;">${t.name}</h4>
+                            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">
+                                Squad: ${sqData.squadName} | Time: ${t.matchTime}
+                            </p>
+                            ${roomHtml}
+                        </div>
+                    `;
+                }
+            }
+            if(!hasMatch) list.innerHTML = '<p style="color:var(--text-muted)">You haven\'t joined any tournaments yet.</p>';
+        }
+
+        window.copyText = (text) => {
+            navigator.clipboard.writeText(text);
+            alert("Copied: " + text);
+        };
+    </script>
+</body>
+</html>
