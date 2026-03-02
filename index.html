@@ -53,6 +53,52 @@
         }
         header h2 { font-size: 1.2rem; color: var(--neon-cyan); text-shadow: 0 0 10px var(--neon-cyan-glow); }
 
+        /* ================= SLIDER STYLES (NEW) ================= */
+        .slider-container {
+            width: 100%;
+            height: 150px;
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            display: none; /* Hidden by default until loaded */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--glass-border);
+        }
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            object-fit: cover;
+            cursor: pointer;
+        }
+        .slide.active { opacity: 1; z-index: 1; }
+        .slider-dots {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+            z-index: 2;
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.4);
+            transition: 0.3s;
+        }
+        .dot.active {
+            background: var(--neon-cyan);
+            box-shadow: 0 0 5px var(--neon-cyan-glow);
+            transform: scale(1.2);
+        }
+
         .btn {
             padding: 10px 15px; border: none; border-radius: 8px; font-family: 'Poppins', sans-serif;
             font-size: 0.9rem; cursor: pointer; transition: 0.3s; color: #fff;
@@ -113,6 +159,655 @@
         .nav-item span { font-size: 0.7rem; font-family: 'Poppins', sans-serif; }
         .nav-item.active { color: var(--neon-cyan); text-shadow: 0 0 10px var(--neon-cyan-glow); transform: translateY(-3px); }
 
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+            display: none; justify-content: center; align-items: center; z-index: 200; padding: 20px;
+        }
+        .modal-content {
+            background: var(--bg-dark); border: 1px solid var(--neon-cyan);
+            border-radius: var(--card-radius); width: 100%; max-width: 400px;
+            padding: 20px; max-height: 90vh; overflow-y: auto; box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .close-modal { color: var(--danger); cursor: pointer; font-size: 1.5rem; }
+
+        .profile-img { width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--neon-cyan); object-fit: cover; margin: 0 auto 10px; display: block; }
+        .board-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); padding: 10px 0; }
+        .board-item:last-child { border-bottom: none; }
+        .total-box { text-align: center; margin-bottom: 15px; padding: 15px; background: rgba(0,255,136,0.1); border: 1px solid var(--success); border-radius: 12px; color: var(--success); }
+        .total-box h2 { font-size: 1.8rem; text-shadow: 0 0 10px rgba(0,255,136,0.4); }
+
+        .room-box { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-top: 10px; border-left: 3px solid var(--neon-cyan); }
+        .copy-btn { background: none; border: none; color: var(--neon-cyan); cursor: pointer; font-size: 1.1rem; float: right; padding: 2px 5px;}
+        
+        .status-badge { display: inline-block; padding: 3px 8px; border-radius: 5px; font-size: 0.75rem; font-weight: bold; margin-bottom: 5px;}
+        .status-pending { background: rgba(255, 204, 0, 0.1); color: var(--warning); border: 1px solid var(--warning); }
+        .status-approved { background: rgba(0, 255, 136, 0.1); color: var(--success); border: 1px solid var(--success); }
+
+        .pay-number-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 6px; margin-bottom: 6px; border-left: 3px solid var(--neon-cyan); }
+        .pay-number-row span { color: var(--neon-cyan); font-weight: bold; font-size: 1.1rem; letter-spacing: 1px; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. Authentication Section -->
+    <div id="auth-section">
+        <div class="glass auth-card" id="login-box">
+            <h2><i class="fa-solid fa-gamepad"></i> Player Login</h2>
+            <input type="email" id="log-email" placeholder="Email Address">
+            <input type="password" id="log-pass" placeholder="Password">
+            <button class="btn btn-primary" onclick="loginUser()">Login</button>
+            <span class="toggle-auth" onclick="toggleAuth()">Create new account? Register</span>
+        </div>
+
+        <div class="glass auth-card" id="reg-box" style="display: none;">
+            <h2><i class="fa-solid fa-user-plus"></i> Register</h2>
+            <input type="text" id="reg-name" placeholder="Full Name">
+            <input type="text" id="reg-uid" placeholder="Farlight 84 UID">
+            <input type="email" id="reg-email" placeholder="Email Address">
+            <input type="password" id="reg-pass" placeholder="Password">
+            <button class="btn btn-primary" onclick="registerUser()">Register</button>
+            <span class="toggle-auth" onclick="toggleAuth()">Already have an account? Login</span>
+        </div>
+    </div>
+
+    <!-- 2. Main App Section -->
+    <div id="main-app" style="display: none;">
+        <header>
+            <h2>Farlight 84 eSports</h2>
+            <img id="header-avatar" src="https://via.placeholder.com/40" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--neon-cyan); object-fit:cover;">
+        </header>
+
+        <!-- View: Tournaments -->
+        <div id="view-home" class="app-view active">
+            
+            <!-- NEW: Image Banner Slider -->
+            <div id="banner-slider" class="slider-container">
+                <div id="slider-images"></div>
+                <div id="slider-dots" class="slider-dots"></div>
+            </div>
+
+            <div class="filter-container">
+                <div class="filter-btn active" onclick="filterTournaments('all', this)">All</div>
+                <div class="filter-btn" onclick="filterTournaments('cash', this)">Cash</div>
+                <div class="filter-btn" onclick="filterTournaments('diamond', this)">Diamond</div>
+            </div>
+            <div id="tournament-list">
+                <!-- Loaded via JS -->
+            </div>
+        </div>
+
+        <!-- View: My Matches -->
+        <div id="view-matches" class="app-view">
+            <h3 style="margin-bottom: 15px; color: var(--neon-cyan);"><i class="fa-solid fa-crosshairs"></i> My Matches</h3>
+            <div id="my-matches-list">
+                <!-- Loaded via JS -->
+            </div>
+        </div>
+
+        <!-- View: Board -->
+        <div id="view-board" class="app-view">
+            <div class="total-box">
+                <p>Total Community Donations</p>
+                <h2 id="total-donation-counter">৳ 0</h2>
+            </div>
+            
+            <h3 style="margin-bottom: 10px; color:var(--neon-purple);"><i class="fa-solid fa-bullhorn"></i> Notice Board</h3>
+            <div class="glass" id="notice-list"></div>
+
+            <h3 style="margin-top: 20px; margin-bottom: 10px; color:var(--neon-cyan);"><i class="fa-solid fa-trophy"></i> Top Donators</h3>
+            <div class="glass" id="donation-board"></div>
+        </div>
+
+        <!-- View: Profile -->
+        <div id="view-profile" class="app-view">
+            <div class="glass" style="text-align: center;">
+                <img id="prof-img-display" class="profile-img" src="https://via.placeholder.com/80">
+                <h2 id="prof-name" style="color:var(--neon-cyan);">Loading...</h2>
+                <p id="prof-uid" style="color:var(--text-muted); margin-bottom: 15px;">UID: ---</p>
+                <button class="btn btn-primary btn-sm" onclick="openModal('modal-edit-profile')"><i class="fa-solid fa-pen"></i> Edit Profile</button>
+                <button class="btn btn-danger btn-sm" onclick="logout()" style="margin-top: 15px; width: 100%;"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="switchTab('view-home', this)"><i class="fa-solid fa-house"></i><span>Home</span></div>
+            <div class="nav-item" onclick="switchTab('view-matches', this)"><i class="fa-solid fa-gamepad"></i><span>Matches</span></div>
+            <div class="nav-item" onclick="switchTab('view-board', this)"><i class="fa-solid fa-chart-simple"></i><span>Board</span></div>
+            <div class="nav-item" onclick="switchTab('view-profile', this)"><i class="fa-solid fa-user"></i><span>Profile</span></div>
+        </div>
+    </div>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- Join Tournament Modal -->
+    <div id="modal-join" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="join-t-title">Register Squad</h3>
+                <i class="fa-solid fa-xmark close-modal" onclick="closeModal('modal-join')"></i>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--warning); margin-bottom: 15px;">Note: Registration requires Admin Approval.</p>
+            <input type="hidden" id="join-t-id">
+            
+            <input type="text" id="sq-name" placeholder="Squad Name (Required)">
+            <input type="text" id="sq-p1" placeholder="Player 1 UID (Required)">
+            <input type="text" id="sq-p2" placeholder="Player 2 UID (Optional)">
+            <input type="text" id="sq-p3" placeholder="Player 3 UID (Optional)">
+
+            <button class="btn btn-primary" onclick="submitRegistration()" style="margin-top: 15px;">Submit Registration</button>
+        </div>
+    </div>
+
+    <!-- Donate Modal -->
+    <div id="modal-donate" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="donate-t-title">Support Tournament</h3>
+                <i class="fa-solid fa-xmark close-modal" onclick="closeModal('modal-donate')"></i>
+            </div>
+            <input type="hidden" id="don-t-id">
+            
+            <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--glass-border);">
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">
+                    Send money to Admin (Send Money):
+                </p>
+                <div id="dynamic-payment-numbers"></div>
+                <p id="dynamic-payment-note" style="font-size: 0.8rem; color: var(--warning); margin-top: 10px; font-style: italic;"></p>
+                
+                <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 15px 0;">
+                
+                <input type="number" id="don-amount" placeholder="Amount Sent (৳)">
+                <input type="text" id="don-trxid" placeholder="Transaction ID (TrxID)">
+                <label class="checkbox-container">
+                    <input type="checkbox" id="don-hide"> Hide My Name on Leaderboard
+                </label>
+            </div>
+            <button class="btn btn-success" onclick="processDonation()">Submit Donation</button>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div id="modal-edit-profile" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Profile</h3>
+                <i class="fa-solid fa-xmark close-modal" onclick="closeModal('modal-edit-profile')"></i>
+            </div>
+            <input type="text" id="edit-name" placeholder="Full Name">
+            <input type="text" id="edit-uid" placeholder="In-Game UID">
+            <input type="text" id="edit-img" placeholder="Profile Image URL (Optional)">
+            <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+        </div>
+    </div>
+
+    <!-- ================= FIREBASE & JS LOGIC ================= -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getDatabase, ref, onValue, set, push, update, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2F2OSi0Na70juloltQZ7jxij8d2-0B1c",
+            authDomain: "farlight-84-tur.firebaseapp.com",
+            databaseURL: "https://farlight-84-tur-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "farlight-84-tur",
+            storageBucket: "farlight-84-tur.firebasestorage.app",
+            messagingSenderId: "622342153291",
+            appId: "1:622342153291:web:d5bea1d6dc774f01ce99ce"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let currentUser = null;
+        let allTournaments = [];
+        let bannerInterval; // For slider interval tracking
+
+        window.toggleAuth = () => {
+            const loginBox = document.getElementById('login-box');
+            const regBox = document.getElementById('reg-box');
+            if(loginBox.style.display === 'none') { loginBox.style.display = 'block'; regBox.style.display = 'none'; } 
+            else { loginBox.style.display = 'none'; regBox.style.display = 'block'; }
+        };
+
+        window.registerUser = async () => {
+            try {
+                const name = document.getElementById('reg-name').value;
+                const uid = document.getElementById('reg-uid').value;
+                const email = document.getElementById('reg-email').value;
+                const pass = document.getElementById('reg-pass').value;
+
+                if(!name || !uid || !email || !pass) return alert("Fill all fields!");
+
+                const q = query(ref(db, 'users'), orderByChild('email'), equalTo(email));
+                const snap = await get(q);
+                if(snap.exists()) return alert("Email already registered!");
+
+                const newUserRef = push(ref(db, 'users'));
+                const userId = newUserRef.key;
+                await set(newUserRef, {
+                    userId: userId, name: name, gameUID: uid, email: email, password: pass,
+                    profileImage: "https://via.placeholder.com/80"
+                });
+
+                alert("Registration Successful! Please Login.");
+                toggleAuth();
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        };
+
+        window.loginUser = async () => {
+            try {
+                const email = document.getElementById('log-email').value;
+                const pass = document.getElementById('log-pass').value;
+
+                if(!email || !pass) return alert("Enter email and password!");
+
+                const q = query(ref(db, 'users'), orderByChild('email'), equalTo(email));
+                const snap = await get(q);
+
+                if(!snap.exists()) return alert("User not found!");
+
+                let loggedIn = false;
+                snap.forEach((child) => {
+                    const data = child.val();
+                    if(data.password === pass) {
+                        localStorage.setItem('f84_userid', data.userId);
+                        loggedIn = true;
+                    }
+                });
+
+                if(loggedIn) { checkLogin(); } else { alert("Wrong Password!"); }
+            } catch(error) {
+                alert("Error: " + error.message);
+            }
+        };
+
+        window.logout = () => { localStorage.removeItem('f84_userid'); location.reload(); };
+
+        function checkLogin() {
+            const userId = localStorage.getItem('f84_userid');
+            if(userId) {
+                document.getElementById('auth-section').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+                loadUserData(userId);
+                initAppRealtime();
+            }
+        }
+        checkLogin();
+
+        window.switchTab = (tabId, element) => {
+            document.querySelectorAll('.app-view').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            element.classList.add('active');
+        };
+
+        window.openModal = (id) => document.getElementById(id).style.display = 'flex';
+        window.closeModal = (id) => document.getElementById(id).style.display = 'none';
+
+        function loadUserData(userId) {
+            onValue(ref(db, `users/${userId}`), (snap) => {
+                if(!snap.exists()) return logout();
+                currentUser = snap.val();
+                document.getElementById('header-avatar').src = currentUser.profileImage;
+                document.getElementById('prof-img-display').src = currentUser.profileImage;
+                document.getElementById('prof-name').innerText = currentUser.name;
+                document.getElementById('prof-uid').innerText = "UID: " + currentUser.gameUID;
+                
+                document.getElementById('edit-name').value = currentUser.name;
+                document.getElementById('edit-uid').value = currentUser.gameUID;
+                document.getElementById('edit-img').value = currentUser.profileImage !== "https://via.placeholder.com/80" ? currentUser.profileImage : "";
+                document.getElementById('sq-p1').value = currentUser.gameUID;
+            });
+        }
+
+        function initAppRealtime() {
+            // Load Banners (NEW)
+            onValue(ref(db, 'banners'), (snap) => {
+                const sliderContainer = document.getElementById('banner-slider');
+                const imagesDiv = document.getElementById('slider-images');
+                const dotsDiv = document.getElementById('slider-dots');
+
+                imagesDiv.innerHTML = '';
+                dotsDiv.innerHTML = '';
+                clearInterval(bannerInterval);
+
+                if (snap.exists()) {
+                    let activeBanners = [];
+                    snap.forEach(child => {
+                        let data = child.val();
+                        // Check if banner is active (supports boolean or string true)
+                        if (data.isActive === true || data.isActive === "true") {
+                            activeBanners.push(data);
+                        }
+                    });
+
+                    if (activeBanners.length > 0) {
+                        sliderContainer.style.display = 'block';
+                        
+                        activeBanners.forEach((b, index) => {
+                            let clickAction = b.targetUrl ? `onclick="window.open('${b.targetUrl}', '_blank')"` : '';
+                            imagesDiv.innerHTML += `<img src="${b.imageUrl}" class="slide ${index === 0 ? 'active' : ''}" ${clickAction}>`;
+                            dotsDiv.innerHTML += `<div class="dot ${index === 0 ? 'active' : ''}"></div>`;
+                        });
+
+                        if (activeBanners.length > 1) {
+                            startBannerSlider(activeBanners.length);
+                        }
+                    } else {
+                        sliderContainer.style.display = 'none';
+                    }
+                } else {
+                    sliderContainer.style.display = 'none';
+                }
+            });
+
+            // Load Tournaments
+            onValue(ref(db, 'tournaments'), (snap) => {
+                allTournaments = [];
+                if(snap.exists()) {
+                    snap.forEach(child => { allTournaments.push({ id: child.key, ...child.val() }); });
+                }
+                renderTournaments('all');
+                renderMyMatches();
+            });
+
+            // Load Notices
+            onValue(ref(db, 'notices'), (snap) => {
+                const list = document.getElementById('notice-list');
+                list.innerHTML = '';
+                if(snap.exists()) {
+                    snap.forEach(child => {
+                        const d = child.val();
+                        list.innerHTML += `<div style="padding:10px; border-bottom:1px solid var(--glass-border);">
+                            <p style="font-size:0.9rem;">${d.message}</p>
+                            <small style="color:var(--text-muted); font-size:0.7rem;">${d.time}</small>
+                        </div>`;
+                    });
+                } else { list.innerHTML = '<p style="color:var(--text-muted)">No new notices.</p>'; }
+            });
+
+            // Load Donations
+            onValue(ref(db, 'donations'), (snap) => {
+                const list = document.getElementById('donation-board');
+                let totalAppAmount = 0;
+                const userStats = {};
+
+                if(snap.exists()) {
+                    snap.forEach(tChild => {
+                        const tId = tChild.key;
+                        tChild.forEach(dChild => {
+                            const d = dChild.val();
+                            if(d.status === 'approved') {
+                                totalAppAmount += Number(d.amount);
+                                let displayId = d.hideId ? dChild.key : d.userId;
+                                let displayName = d.hideId ? "Anonymous Player" : (d.userName || "Player");
+
+                                if (!userStats[displayId]) { userStats[displayId] = { name: displayName, total: 0, tournaments: new Set() }; }
+                                userStats[displayId].total += Number(d.amount);
+                                userStats[displayId].tournaments.add(tId);
+                            }
+                        });
+                    });
+                }
+                
+                const sortedStats = Object.values(userStats).sort((a, b) => b.total - a.total);
+                list.innerHTML = '';
+                if(sortedStats.length > 0) {
+                    sortedStats.forEach(stat => {
+                        list.innerHTML += `
+                            <div class="board-item">
+                                <div>
+                                    <div style="color:var(--neon-cyan); font-weight:bold; font-size:0.95rem;">
+                                        <i class="fa-solid fa-gem"></i> ${stat.name}
+                                    </div>
+                                    <div style="font-size:0.75rem; color:var(--text-muted);">
+                                        Supported in ${stat.tournaments.size} Tournament(s)
+                                    </div>
+                                </div>
+                                <strong style="color:var(--success); font-size:1.1rem;">+৳${stat.total}</strong>
+                            </div>`;
+                    });
+                } else {
+                    list.innerHTML = '<p style="color:var(--text-muted)">No donations yet. Be the first!</p>';
+                }
+                document.getElementById('total-donation-counter').innerText = `৳ ${totalAppAmount}`;
+            });
+        }
+
+        // NEW: Slider Functionality
+        function startBannerSlider(totalSlides) {
+            let currentSlide = 0;
+            bannerInterval = setInterval(() => {
+                let slides = document.querySelectorAll('.slide');
+                let dots = document.querySelectorAll('.dot');
+                if(!slides.length) return;
+
+                slides[currentSlide].classList.remove('active');
+                if(dots[currentSlide]) dots[currentSlide].classList.remove('active');
+
+                currentSlide = (currentSlide + 1) % totalSlides;
+
+                slides[currentSlide].classList.add('active');
+                if(dots[currentSlide]) dots[currentSlide].classList.add('active');
+            }, 3500); // changes image every 3.5 seconds
+        }
+
+        window.filterTournaments = (type, btnElement) => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+            renderTournaments(type);
+        };
+
+        function renderTournaments(filterType) {
+            const list = document.getElementById('tournament-list');
+            list.innerHTML = '';
+            
+            const filtered = filterType === 'all' ? allTournaments : allTournaments.filter(t => t.type === filterType);
+            if(filtered.length === 0) { list.innerHTML = '<p style="color:var(--text-muted); text-align:center;">No tournaments found.</p>'; return; }
+
+            filtered.forEach(t => {
+                const badgeClass = t.type === 'cash' ? 'cash' : 'diamond';
+                const isFull = t.slotsLeft <= 0;
+                const isClosed = t.status === 'closed';
+                
+                let btnHtml = '';
+                if(isClosed) btnHtml = `<button class="btn btn-sm" disabled>Registration Closed</button>`;
+                else if(isFull) btnHtml = `<button class="btn btn-sm" disabled>Slots Full</button>`;
+                else btnHtml = `<button class="btn btn-primary btn-sm" onclick="openJoinModal('${t.id}', '${t.name}')">Join Now</button>`;
+
+                let donateBtn = t.type === 'cash' ? `<button class="btn btn-success btn-sm" onclick="openDonateModal('${t.id}', '${t.name}')"><i class="fa-solid fa-hand-holding-dollar"></i> Donate</button>` : '';
+
+                list.innerHTML += `
+                    <div class="glass tournament-card">
+                        <div class="t-header">
+                            <div class="t-title">${t.name}</div>
+                            <span class="badge ${badgeClass}">${t.type.toUpperCase()}</span>
+                        </div>
+                        <div class="t-details">
+                            Time: <span>${t.matchTime}</span> <br>
+                            Entry Fee: <span style="color:var(--success)">FREE</span> | Prize Pool: <span style="color:var(--neon-cyan)">${t.prizePool}</span> <br>
+                            Slots Available: <span style="color:${t.slotsLeft < 5 ? 'var(--danger)' : 'var(--neon-cyan)'}">${t.slotsLeft} / ${t.totalSlots}</span>
+                        </div>
+                        <div class="action-buttons">
+                            ${btnHtml}
+                            ${donateBtn}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        window.openJoinModal = (tId, tName) => {
+            document.getElementById('join-t-id').value = tId;
+            document.getElementById('join-t-title').innerText = "Join " + tName;
+            
+            document.getElementById('sq-name').value = '';
+            document.getElementById('sq-p2').value = '';
+            document.getElementById('sq-p3').value = '';
+            openModal('modal-join');
+        };
+
+        window.openDonateModal = (tId, tName) => {
+            document.getElementById('don-t-id').value = tId;
+            document.getElementById('donate-t-title').innerText = "Support " + tName;
+            
+            const tournament = allTournaments.find(t => t.id === tId);
+            const numContainer = document.getElementById('dynamic-payment-numbers');
+            const noteContainer = document.getElementById('dynamic-payment-note');
+            
+            numContainer.innerHTML = '';
+            noteContainer.innerText = '';
+
+            if (tournament && tournament.paymentDetails) {
+                const pd = tournament.paymentDetails;
+                if(pd.bkash) numContainer.innerHTML += `
+                    <div class="pay-number-row">
+                        <div>bKash: <span>${pd.bkash}</span></div>
+                        <button class="copy-btn" onclick="copyText('${pd.bkash}')"><i class="fa-regular fa-copy"></i></button>
+                    </div>`;
+                if(pd.nagad) numContainer.innerHTML += `
+                    <div class="pay-number-row">
+                        <div>Nagad: <span style="color:var(--warning);">${pd.nagad}</span></div>
+                        <button class="copy-btn" style="color:var(--warning);" onclick="copyText('${pd.nagad}')"><i class="fa-regular fa-copy"></i></button>
+                    </div>`;
+                if(pd.rocket) numContainer.innerHTML += `
+                    <div class="pay-number-row">
+                        <div>Rocket: <span style="color:var(--neon-purple);">${pd.rocket}</span></div>
+                        <button class="copy-btn" style="color:var(--neon-purple);" onclick="copyText('${pd.rocket}')"><i class="fa-regular fa-copy"></i></button>
+                    </div>`;
+                
+                if(pd.note) noteContainer.innerText = "* Note: " + pd.note;
+            } else {
+                numContainer.innerHTML = `<p style="color:var(--danger); font-size:0.85rem;">No payment numbers available right now.</p>`;
+            }
+
+            document.getElementById('don-amount').value = '';
+            document.getElementById('don-trxid').value = '';
+            document.getElementById('don-hide').checked = false;
+            openModal('modal-donate');
+        };
+
+        window.processDonation = async () => {
+            const tId = document.getElementById('don-t-id').value;
+            const amount = document.getElementById('don-amount').value;
+            const trxId = document.getElementById('don-trxid').value;
+            const hideId = document.getElementById('don-hide').checked;
+
+            if(!amount || !trxId) return alert("Please provide both Amount and TrxID!");
+
+            const donRef = push(ref(db, `donations/${tId}`));
+            await set(donRef, {
+                userId: currentUser.userId, 
+                userName: currentUser.name, 
+                amount: Number(amount), 
+                trxId: trxId,
+                hideId: hideId, 
+                status: 'pending', 
+                tournamentId: tId,
+                timestamp: new Date().toISOString()
+            });
+
+            closeModal('modal-donate');
+            alert("Donation Submitted! It will appear on the leaderboard after Admin approval.");
+        };
+
+        window.submitRegistration = async () => {
+            const tId = document.getElementById('join-t-id').value;
+            const uId = currentUser.userId;
+
+            const regCheck = await get(ref(db, `registrations/${tId}/${uId}`));
+            if(regCheck.exists()) return alert("You have already submitted a registration for this tournament!");
+
+            const tRef = ref(db, `tournaments/${tId}`);
+            const tSnap = await get(tRef);
+            if(!tSnap.exists()) return alert("Tournament deleted.");
+            const tData = tSnap.val();
+            
+            if(tData.slotsLeft <= 0) return alert("Sorry, slots are full!");
+            if(tData.status === 'closed') return alert("Registration is closed!");
+
+            const sqName = document.getElementById('sq-name').value;
+            const p1 = document.getElementById('sq-p1').value;
+            const p2 = document.getElementById('sq-p2').value;
+            const p3 = document.getElementById('sq-p3').value;
+
+            if(!sqName || !p1) return alert("Squad Name and Player 1 UID are required!");
+
+            await set(ref(db, `registrations/${tId}/${uId}`), {
+                squadName: sqName, 
+                players: [p1, p2, p3], 
+                status: 'pending',
+                timestamp: new Date().toISOString()
+            });
+
+            closeModal('modal-join');
+            alert("Registration Submitted! Wait for Admin Approval.");
+            renderMyMatches();
+        };
+
+        async function renderMyMatches() {
+            if(!currentUser) return;
+            const list = document.getElementById('my-matches-list');
+            let hasMatch = false;
+            list.innerHTML = '';
+
+            for (const t of allTournaments) {
+                const regSnap = await get(ref(db, `registrations/${t.id}/${currentUser.userId}`));
+                if(regSnap.exists()) {
+                    hasMatch = true;
+                    const sqData = regSnap.val();
+                    
+                    let roomHtml = '';
+                    let statusBadge = '';
+
+                    if (sqData.status === 'pending') {
+                        statusBadge = `<div class="status-badge status-pending">Pending Approval</div>`;
+                        roomHtml = `<div class="room-box" style="color:var(--warning); border-left-color:var(--warning);"><i class="fa-solid fa-hourglass-half"></i> Room details will be shown once Admin approves your squad.</div>`;
+                    } else {
+                        statusBadge = `<div class="status-badge status-approved">Approved</div>`;
+                        if(t.roomLocked === 'true') {
+                            roomHtml = `<div class="room-box" style="color:var(--text-muted);"><i class="fa-solid fa-lock"></i> Room ID & Pass will be revealed before match.</div>`;
+                        } else {
+                            roomHtml = `
+                                <div class="room-box">
+                                    <p style="color:var(--neon-cyan);"><strong>Room ID:</strong> <span id="r-${t.id}">${t.roomId}</span> 
+                                    <button class="copy-btn" onclick="copyText('${t.roomId}')"><i class="fa-regular fa-copy"></i></button></p>
+                                    <p style="color:var(--success); margin-top:5px;"><strong>Password:</strong> <span id="p-${t.id}">${t.roomPassword}</span>
+                                    <button class="copy-btn" style="color:var(--success);" onclick="copyText('${t.roomPassword}')"><i class="fa-regular fa-copy"></i></button></p>
+                                </div>
+                            `;
+                        }
+                    }
+
+                    list.innerHTML += `
+                        <div class="glass">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <h4 style="color:var(--neon-cyan); margin-bottom:5px;">${t.name}</h4>
+                                ${statusBadge}
+                            </div>
+                            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">
+                                Squad: ${sqData.squadName} | Time: ${t.matchTime}
+                            </p>
+                            ${roomHtml}
+                        </div>
+                    `;
+                }
+            }
+            if(!hasMatch) list.innerHTML = '<p style="color:var(--text-muted)">You haven\'t joined any tournaments yet.</p>';
+        }
+
+        window.copyText = (text) => {
+            navigator.clipboard.writeText(text);
+            alert("Copied: " + text);
+        };
+    </script>
+</body>
+</html>
         .modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
